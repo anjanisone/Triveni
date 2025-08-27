@@ -11,24 +11,27 @@ df = spark.table(TABLE)
 
 clean = (
     df
+    # Start with original col into cleaned col
+    .withColumn("part_model_name_cleaned", F.col("part_model_name"))
+
     # 2) Replace '-' and '_' with a space
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", r"[-_]+", " "))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", r"[-_]+", " "))
 
     # 1) Remove listed words
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", strip_regex, ""))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", strip_regex, ""))
 
     # 3) Remove any leading non-letters (e.g., job numbers like 4946-…)
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", r"^[^A-Za-z]+", ""))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", r"^[^A-Za-z]+", ""))
 
     # 4) Remove if starts with 2+ consecutive X's (XX, XXX, XXXX, etc.)
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", r"(?i)^X{2,}\s*", ""))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", r"(?i)^X{2,}\s*", ""))
 
     # 5) Collapse adjacent duplicate words: "alpha alpha beta" -> "alpha beta"
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", r"(?i)\b(\w+)(?:\s+\1)+\b", r"\1"))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", r"(?i)\b(\w+)(?:\s+\1)+\b", r"\1"))
 
     # Final tidy whitespace
-    .withColumn("part_model_name", F.regexp_replace("part_model_name", r"\s+", " "))
-    .withColumn("part_model_name", F.trim("part_model_name"))
+    .withColumn("part_model_name_cleaned", F.regexp_replace("part_model_name_cleaned", r"\s+", " "))
+    .withColumn("part_model_name_cleaned", F.trim("part_model_name_cleaned"))
 )
 
 # Overwrite the same table with cleaned data
