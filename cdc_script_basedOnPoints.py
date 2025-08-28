@@ -10,7 +10,7 @@ REGISTRY_TABLE      = f"{CATALOG_SCHEMA}.vp_cdc_table_registry"
 WATERMARK_TABLE     = f"{CATALOG_SCHEMA}.vp_cdc_watermark"
 
 # -----------------------------------------------------------
-# **1. Extract CDC Tables**
+# 1. ** Extract CDC Tables **
 # -----------------------------------------------------------
 # Read from SQL Server system CDC tables via JDBC
 def read_sql(jdbc_url, user, pwd, sql_text):
@@ -38,7 +38,7 @@ WHERE t.is_ms_shipped = 0;
 change_tables_df = read_sql(jdbc_url, user, pwd, sql_change_tables)
 
 # -----------------------------------------------------------
-# **2. Register Tables**
+# 2. ** Register Tables **
 # -----------------------------------------------------------
 sql_captured_cols = """
 SELECT
@@ -68,7 +68,7 @@ registry_df = (change_tables_df.join(cols_agg, "capture_instance", "left")
 registry_df.write.mode("overwrite").saveAsTable(REGISTRY_TABLE)
 
 # -----------------------------------------------------------
-# **3. Add Destination Table**
+# 3. ** Add Destination Table **
 # -----------------------------------------------------------
 # Add column destination_table into registry
 reg_with_dest = (registry_df
@@ -79,7 +79,7 @@ reg_with_dest = (registry_df
 reg_with_dest.write.mode("overwrite").saveAsTable(REGISTRY_TABLE)
 
 # -----------------------------------------------------------
-# **4. Build ingest_query**
+# 4. ** Build ingest_query **
 # -----------------------------------------------------------
 # Build CDC function call query strings dynamically per capture instance
 def get_lsn_hex(jdbc_url, user, pwd, sql_text):
@@ -113,7 +113,7 @@ def build_ingest_query(cap_inst, cols, from_hex, to_hex, src_schema, src_table):
     """
 
 # -----------------------------------------------------------
-# **5. Execute Queries**
+# 5. ** Execute Queries **
 # -----------------------------------------------------------
 reg_rows = reg_with_dest.collect()
 for r in reg_rows:
